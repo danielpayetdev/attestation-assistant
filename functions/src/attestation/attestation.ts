@@ -71,7 +71,7 @@ const remplir = async (page: puppeteer.Page, id: string, valeur: string) => {
 
 const telecharger = async (page: puppeteer.Page) => {
     await (page as any)._client.send('Page.setDownloadBehavior', { behavior: 'allow', downloadPath: DOWNLOAD_DIR });
-    await page.click(".btn-attestation[type='submit']");
+    await page.click("#generate-btn");
     await page.waitFor(4000);
     console.log('PDF téléchargé dans', ATTESTATION_FILE);
 }
