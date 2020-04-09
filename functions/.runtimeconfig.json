@@ -1,0 +1,11 @@
+{
+  "smtp": {
+    "port": "465",
+    "login": {
+      "email": "attestation-covid19@danielpayet.dev",
+      "password": "sjz;iD7F/nXmq5+"
+    },
+    "host": "ssl0.ovh.net",
+    "secure": "true"
+  }
+}
