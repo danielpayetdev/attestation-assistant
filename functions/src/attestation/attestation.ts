@@ -20,7 +20,10 @@ const ATTESTATION_FILE = path.join(DOWNLOAD_DIR, ATTESTATION_FILENAME);
 
 export const generateAttestation = functions.runWith(runtimeOpts).https.onRequest(async (request, response) => {
     const browser = await puppeteer.launch({
-        args: ['--no-sandbox']
+        args: ['--no-sandbox'],
+        env: {
+            TZ: 'Europe/Paris',
+        }
     });
 
     try {
@@ -28,9 +31,10 @@ export const generateAttestation = functions.runWith(runtimeOpts).https.onReques
         await page.goto(URL_GENERATEUR_ATTESTATION, { waitUntil: 'networkidle2' });
         const userId = await getUserIdFromApiKey(request);
         const user = await getUser(userId);
-        await remplirFormulaire(page, user, getMotif(request));
+        const motif = getMotif(request) ?? user.motif;
+        await remplirFormulaire(page, user, motif);
         await telecharger(page);
-        await sendMail(user.email, getPdf());
+        await sendMail(user.email, getPdf(), motif);
         fs.unlinkSync(ATTESTATION_FILE);
         response.sendStatus(200);
     } catch (e) {
@@ -40,7 +44,7 @@ export const generateAttestation = functions.runWith(runtimeOpts).https.onReques
     await browser.close();
 });
 
-const remplirFormulaire = async (page: puppeteer.Page, user: Utilisateur, motif?: string) => {
+const remplirFormulaire = async (page: puppeteer.Page, user: Utilisateur, motif: string) => {
 
     await remplir(page, 'field-firstname', user.prenom);
     await remplir(page, 'field-lastname', user.nom);
@@ -49,12 +53,12 @@ const remplirFormulaire = async (page: puppeteer.Page, user: Utilisateur, motif?
     await remplir(page, 'field-address', user.adresse);
     await remplir(page, 'field-town', user.ville);
     await remplir(page, 'field-zipcode', user.codePostal);
-    await page.click(`.form-check #checkbox-${motif ?? user.motif}`);
+    await page.click(`.form-check #checkbox-${motif}`);
 }
 
 const getMotif = (request: functions.https.Request) => {
     const motif = request.query.motif;
-    if(motif){
+    if (motif) {
         return Motif.of(motif);
     }
     return undefined;
@@ -96,7 +100,7 @@ const getUserIdFromApiKey = async (request: functions.https.Request) => {
     return query.docs[0].data().user;
 };
 
-const sendMail = async (email: string, pdf: Buffer) => {
+const sendMail = async (email: string, pdf: Buffer, motif: string) => {
 
     const transporter = nodemailer.createTransport({
         host: functions.config().smtp.host,
@@ -111,7 +115,7 @@ const sendMail = async (email: string, pdf: Buffer) => {
     const info = await transporter.sendMail({
         from: '"Attestation Covid-19" <attestation-covid19@danielpayet.dev>',
         to: email,
-        subject: "Votre attestation de sortie",
+        subject: "Votre attestation de sortie avec le motif :" + motif,
         text: "Bonjour, votre attestation de sortie se trouve en pièce jointe. Bonne journée. #RestezChezVous",
         html: "Bonjour, <br>Votre attestation de sortie se trouve en pièce jointe.<br><br>Bonne journée,<br>#RestezChezVous",
         attachments: [{
