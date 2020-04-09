@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "attestation-assistant"
+  },
+  "targets": {
+    "attestation-assistant": {
+      "hosting": {
+        "attestation-assistant": [
+          "attestation-assistant"
+        ]
+      }
+    }
   }
 }

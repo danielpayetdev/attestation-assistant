@@ -121,8 +121,16 @@
               "devServerTarget": "attestation-assistant:serve:production"
             }
           }
+        },
+        "deploy": {
+          "builder": "@angular/fire:deploy",
+          "options": {}
         }
       }
-    }},
-  "defaultProject": "attestation-assistant"
+    }
+  },
+  "defaultProject": "attestation-assistant",
+  "cli": {
+    "analytics": "86e11ba3-a02e-456c-8080-e4fbae4897ac"
+  }
 }

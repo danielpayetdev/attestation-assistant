@@ -26,11 +26,12 @@ export const generateAttestation = functions.runWith(runtimeOpts).https.onReques
         }
     });
 
+    let user;
     try {
         const page: puppeteer.Page = await browser.newPage();
         await page.goto(URL_GENERATEUR_ATTESTATION, { waitUntil: 'networkidle2' });
         const userId = await getUserIdFromApiKey(request);
-        const user = await getUser(userId);
+        user = await getUser(userId);
         const motif = getMotif(request) ?? user.motif;
         await remplirFormulaire(page, user, motif);
         await telecharger(page);
@@ -39,6 +40,13 @@ export const generateAttestation = functions.runWith(runtimeOpts).https.onReques
         response.sendStatus(200);
     } catch (e) {
         console.error(e.toString());
+        if (user) {
+            try {
+                await sendErrorMail(user.email, e.message.toString());
+            } catch (e) {
+                console.error(e.toString());
+            }
+        }
         response.status(500).send(e.toString());
     }
     await browser.close();
@@ -46,7 +54,7 @@ export const generateAttestation = functions.runWith(runtimeOpts).https.onReques
 
 const remplirFormulaire = async (page: puppeteer.Page, user: Utilisateur, motif: string) => {
 
-    await remplir(page, 'field-firstname', user.prenom);
+    await remplir(page, 'field-firstnameeeeeee', user.prenom);
     await remplir(page, 'field-lastname', user.nom);
     await remplir(page, 'field-birthday', user.dateNaissance);
     await remplir(page, 'field-lieunaissance', user.lieuNaissance);
@@ -101,21 +109,11 @@ const getUserIdFromApiKey = async (request: functions.https.Request) => {
 };
 
 const sendMail = async (email: string, pdf: Buffer, motif: string) => {
-
-    const transporter = nodemailer.createTransport({
-        host: functions.config().smtp.host,
-        port: +functions.config().smtp.port,
-        secure: functions.config().smtp.secure === "true",
-        auth: {
-            user: functions.config().smtp.login.email,
-            pass: functions.config().smtp.login.password
-        }
-    });
-
+    const transporter = getTransporter();
     const info = await transporter.sendMail({
         from: '"Attestation Covid-19" <attestation-covid19@danielpayet.dev>',
         to: email,
-        subject: "Votre attestation de sortie avec le motif :" + motif,
+        subject: "Votre attestation de sortie avec le motif : " + motif,
         text: "Bonjour, votre attestation de sortie se trouve en pièce jointe. Bonne journée. #RestezChezVous",
         html: "Bonjour, <br>Votre attestation de sortie se trouve en pièce jointe.<br><br>Bonne journée,<br>#RestezChezVous",
         attachments: [{
@@ -125,4 +123,39 @@ const sendMail = async (email: string, pdf: Buffer, motif: string) => {
         }],
     });
     console.log("Message sent: %s", info.messageId);
+}
+
+const sendErrorMail = async (email: string, erreur: string) => {
+    const transporter = getTransporter();
+    const info = await transporter.sendMail({
+        from: '"Attestation Covid-19" <attestation-covid19@danielpayet.dev>',
+        to: email,
+        subject: "Erreur lors de la génération de votre attestation de sortie",
+        text:
+            `Bonjour, une erreur c'est produite lors de la génération de votre attestation.
+Merci de réessayer plus tard ou de la faire sur le site officiel du gouvernement
+Bonne journée,
+#RestezChezVous`,
+        html:
+            `Bonjour,<br>
+Une erreur c'est produite lors de la génération de votre attestation.<br>
+Merci de réessayer plus tard ou de la faire sur le <a href="${URL_GENERATEUR_ATTESTATION}">site officiel du gouvernement</a><br>
+<br>
+Bonne journée,<br>
+#RestezChezVous<br><br><br>
+Détails de l'erreur:<br>${erreur}`,
+    });
+    console.log("Error message sent: %s", info.messageId);
+}
+
+const getTransporter = () => {
+    return nodemailer.createTransport({
+        host: functions.config().smtp.host,
+        port: +functions.config().smtp.port,
+        secure: functions.config().smtp.secure === "true",
+        auth: {
+            user: functions.config().smtp.login.email,
+            pass: functions.config().smtp.login.password
+        }
+    });
 }
