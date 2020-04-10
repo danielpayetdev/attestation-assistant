@@ -1,0 +1,14 @@
+:host {
+  display: block;
+  margin: auto;
+
+  padding: 2rem;
+
+  mat-card,
+  form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+}

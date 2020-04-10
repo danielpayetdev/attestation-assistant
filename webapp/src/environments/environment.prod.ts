@@ -1,3 +1,6 @@
+import { firebaseConfiguration } from './firebase.conf';
+
 export const environment = {
-  production: true
+  production: true,
+  firebase: firebaseConfiguration
 };

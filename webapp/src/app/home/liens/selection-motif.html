@@ -1,0 +1,16 @@
+<h1 mat-dialog-title>Sélectionnez un motif de sortie</h1>
+<mat-list mat-dialog-content>
+  <mat-list-item (click)="choisirMotif(motif.TRAVAIL)">Je vais travailler</mat-list-item>
+  <mat-divider ></mat-divider>
+  <mat-list-item (click)="choisirMotif(motif.COURSES)">Je vais faires des courses</mat-list-item>
+  <mat-divider></mat-divider>
+  <mat-list-item (click)="choisirMotif(motif.FAMILLE)">Je dois voir ma famille</mat-list-item>
+  <mat-divider></mat-divider>
+  <mat-list-item (click)="choisirMotif(motif.SPORT)">Je vais faire du sport</mat-list-item>
+  <mat-divider></mat-divider>
+  <mat-list-item (click)="choisirMotif(motif.SANTE)">Je vais voir un medecin</mat-list-item>
+  <mat-divider></mat-divider>
+  <mat-list-item (click)="choisirMotif(motif.JUDICIAIRE)">Je dois sortir pour des raisons judiciaires</mat-list-item>
+  <mat-divider></mat-divider>
+  <mat-list-item (click)="choisirMotif(motif.MISIONS)">Je dois sortir pour une missions d'interêt général</mat-list-item>
+</mat-list>

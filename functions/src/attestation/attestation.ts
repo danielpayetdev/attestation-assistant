@@ -15,29 +15,67 @@ const runtimeOpts: functions.RuntimeOptions = {
 
 const URL_GENERATEUR_ATTESTATION = "https://media.interieur.gouv.fr/deplacement-covid-19/index.html"
 const DOWNLOAD_DIR = os.tmpdir();
-const ATTESTATION_FILENAME = "attestation.pdf"
-const ATTESTATION_FILE = path.join(DOWNLOAD_DIR, ATTESTATION_FILENAME);
+const ATTESTATION_FILENAME_BASE = "attestation";
+const FILE_EXTENTION = ".pdf";
+let FICHIER_NAME: string;
+let ATTESTATION_FILE: string;
 
-export const generateAttestation = functions.runWith(runtimeOpts).https.onRequest(async (request, response) => {
-    const browser = await puppeteer.launch({
-        args: ['--no-sandbox'],
-        env: {
-            TZ: 'Europe/Paris',
+/**
+ * Génère une attestation puis l'envoie par email
+ */
+export const genererAttestationParEmail = functions.runWith(runtimeOpts).https.onCall(async (data, context) => {
+    try {
+        const userId = context.auth?.uid;
+        if (userId) {
+            const user = await getUser(userId);
+            await generateAttestion(user, data.motif ?? user.motif);
+            await sendMail(user.email, getPdf(), data.motif ?? user.motif);
+            fs.unlinkSync(ATTESTATION_FILE);
+            return { success: true }
         }
-    });
+        throw new Error("user identifiant cannot retrive");
+    } catch (e) {
+        console.error(e.toString());
+        throw e;
+    }
+});
 
+/**
+ * Génère une attestation puis retourne le pdf
+ */
+export const getAttestation = functions.runWith(runtimeOpts).https.onCall(async (data, context) => {
+    try {
+        const userId = context.auth?.uid;
+        if (userId) {
+            const user = await getUser(userId);
+            await generateAttestion(user, data.motif ?? user.motif);
+            const attestationBuffer = fs.readFileSync(ATTESTATION_FILE);
+            const attestation = attestationBuffer.toString('base64');
+            fs.unlinkSync(ATTESTATION_FILE);
+            return { attestation, fileName: FICHIER_NAME };
+        }
+        throw new Error("user identifiant cannot retrive");
+    } catch (e) {
+        console.error(e.toString());
+        throw e;
+    }
+});
+
+/**
+ * Fonction public génère une attestation puis l'envoie par email
+ */
+export const genererAttestationPublic = functions.runWith(runtimeOpts).https.onRequest(async (request, response) => {
     let user;
     try {
-        const page: puppeteer.Page = await browser.newPage();
-        await page.goto(URL_GENERATEUR_ATTESTATION, { waitUntil: 'networkidle2' });
-        const userId = await getUserIdFromApiKey(request);
-        user = await getUser(userId);
-        const motif = getMotif(request) ?? user.motif;
-        await remplirFormulaire(page, user, motif);
-        await telecharger(page);
-        await sendMail(user.email, getPdf(), motif);
-        fs.unlinkSync(ATTESTATION_FILE);
-        response.sendStatus(200);
+        const userId = await validateToken(request, response);
+        if (userId) {
+            user = await getUser(userId);
+            const motif = getMotif(request) ?? user.motif;
+            await generateAttestion(user, motif);
+            await sendMail(user.email, getPdf(), motif);
+            fs.unlinkSync(ATTESTATION_FILE);
+            response.sendStatus(200);
+        }
     } catch (e) {
         console.error(e.toString());
         if (user) {
@@ -49,20 +87,42 @@ export const generateAttestation = functions.runWith(runtimeOpts).https.onReques
         }
         response.status(500).send(e.toString());
     }
-    await browser.close();
 });
+
+const generateAttestion = async (user: Utilisateur, motif: string) => {
+    const browser = await getBrowser();
+    try {
+        const page: puppeteer.Page = await browser.newPage();
+        await page.goto(URL_GENERATEUR_ATTESTATION, { waitUntil: 'networkidle2' });
+        await remplirFormulaire(page, user, motif);
+        await telecharger(page);
+    } catch (error) {
+        console.log(error.toString())
+        throw new Error("Impossible de génerer l'attestation.")
+    }
+    await browser.close();
+};
+
+const getBrowser = async () => {
+    return await puppeteer.launch({
+        args: ['--no-sandbox'],
+        env: {
+            TZ: 'Europe/Paris',
+        }
+    });
+};
 
 const remplirFormulaire = async (page: puppeteer.Page, user: Utilisateur, motif: string) => {
 
-    await remplir(page, 'field-firstnameeeeeee', user.prenom);
+    await remplir(page, 'field-firstname', user.prenom);
     await remplir(page, 'field-lastname', user.nom);
-    await remplir(page, 'field-birthday', user.dateNaissance);
+    await remplir(page, 'field-birthday', user.dateNaissance.replace('/', ''));
     await remplir(page, 'field-lieunaissance', user.lieuNaissance);
     await remplir(page, 'field-address', user.adresse);
     await remplir(page, 'field-town', user.ville);
     await remplir(page, 'field-zipcode', user.codePostal);
     await page.click(`.form-check #checkbox-${motif}`);
-}
+};
 
 const getMotif = (request: functions.https.Request) => {
     const motif = request.query.motif;
@@ -75,13 +135,28 @@ const getMotif = (request: functions.https.Request) => {
 const remplir = async (page: puppeteer.Page, id: string, valeur: string) => {
     await page.focus(`#${id}`)
     await page.keyboard.type(valeur);
-}
+};
 
 const telecharger = async (page: puppeteer.Page) => {
     await (page as any)._client.send('Page.setDownloadBehavior', { behavior: 'allow', downloadPath: DOWNLOAD_DIR });
     await page.click("#generate-btn");
-    await page.waitFor(4000);
+    setfileName();
+    await page.waitFor(1000);
     console.log('PDF téléchargé dans', ATTESTATION_FILE);
+};
+
+const setfileName = () => {
+    FICHIER_NAME = `${ATTESTATION_FILENAME_BASE}-${getDate()}${FILE_EXTENTION}`;
+    ATTESTATION_FILE = path.join(DOWNLOAD_DIR, FICHIER_NAME);
+}
+
+const getDate = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${formatDeuxDigit(now.getMonth() + 1)}-${formatDeuxDigit(now.getDate())}_${formatDeuxDigit(now.getHours())}-${formatDeuxDigit(now.getMinutes())}`;
+}
+
+const formatDeuxDigit = (date: number) => {
+    return `${date <= 9 ? '0' : ''}${date}`;
 }
 
 const getPdf = () => {
@@ -93,19 +168,15 @@ const getUser: (userId: string) => Promise<Utilisateur> = async (userId) => {
     return query.data() as Utilisateur;
 };
 
-const getUserIdFromApiKey = async (request: functions.https.Request) => {
+const validateToken = async (request: functions.https.Request, response: functions.Response) => {
     const apiKey = request.query.api_key;
-    if (apiKey === undefined || apiKey === "") {
-        throw new Error("No api key");
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(apiKey);
+        return decodedToken.uid;
+    } catch (e) {
+        response.status(401).send(e.toString());
+        return undefined;
     }
-    const query = await admin.firestore().collection('apiKeys').where("key", "==", apiKey).get();
-    if (query.empty) {
-        throw new Error("No api key exist");
-    }
-    if (query.size !== 1) {
-        throw new Error("Multiple instance of api key exist, please contact support");
-    }
-    return query.docs[0].data().user;
 };
 
 const sendMail = async (email: string, pdf: Buffer, motif: string) => {
@@ -123,7 +194,7 @@ const sendMail = async (email: string, pdf: Buffer, motif: string) => {
         }],
     });
     console.log("Message sent: %s", info.messageId);
-}
+};
 
 const sendErrorMail = async (email: string, erreur: string) => {
     const transporter = getTransporter();
@@ -146,7 +217,7 @@ Bonne journée,<br>
 Détails de l'erreur:<br>${erreur}`,
     });
     console.log("Error message sent: %s", info.messageId);
-}
+};
 
 const getTransporter = () => {
     return nodemailer.createTransport({
@@ -158,4 +229,4 @@ const getTransporter = () => {
             pass: functions.config().smtp.login.password
         }
     });
-}
+};

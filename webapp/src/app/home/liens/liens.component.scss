@@ -1,0 +1,16 @@
+mat-card {
+  margin: 1rem;
+  button {
+    width: 100%;
+  }
+}
+
+#api-url {
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+mat-progress-spinner {
+  margin: 0.5rem auto;
+}

@@ -1,0 +1,26 @@
+<mat-card id="genererAttestationParEmail">
+  <button id="get-par-email" mat-raised-button color="primary" (click)="getParEmail()">
+    Recevoir mon attestation par e-mail
+    <mat-progress-spinner *ngIf="emailIsGenerating" diameter="20" color="accent" mode="indeterminate">
+    </mat-progress-spinner>
+  </button>
+</mat-card>
+<mat-card id="genererAttestationParTelechargement" (click)="getAttestation()">
+  <button mat-raised-button color="primary">
+    Télécharger l'attestation sur votre appareil
+    <mat-progress-spinner *ngIf="attestationIsGenerating" diameter="20" color="accent" mode="indeterminate">
+    </mat-progress-spinner>
+  </button>
+</mat-card>
+<mat-card id="allezSurSiteGouvernement">
+  <a href="https://media.interieur.gouv.fr/deplacement-covid-19/" target="_blank"><button mat-raised-button
+      color="primary">Rédiger l'attestation sur le site officiel</button></a>
+</mat-card>
+<mat-card id="configurerUrlRestApi">
+  <button mat-raised-button color="primary" (click)="initApiUrl()">Afficher le lien API</button>
+  <mat-card id="api-url" *ngIf="urlApi">
+    <mat-form-field>
+      <textarea matInput cdkTextareaAutosize #autosize="cdkTextareaAutosize" [value]="urlApi"></textarea>
+    </mat-form-field>
+  </mat-card>
+</mat-card>
