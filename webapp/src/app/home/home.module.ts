@@ -42,8 +42,8 @@ import { MatListModule } from '@angular/material/list';
     MatListModule
   ],
   providers: [
-    // { provide: ORIGIN, useValue: 'https://attestation-assistant.web.app' }
-    { provide: ORIGIN, useValue: 'http://localhost:5001' }
+    { provide: ORIGIN, useValue: 'https://attestation-assistant.web.app' }
+    // { provide: ORIGIN, useValue: 'http://localhost:5001' }
   ]
 })
 export class HomeModule { }

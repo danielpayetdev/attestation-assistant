@@ -66,3 +66,4 @@ node_modules/
 
 attestation-assistant-052c73f97303.json
 webapp/src/environments/firebase.conf.ts
+dist

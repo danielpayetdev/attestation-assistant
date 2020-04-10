@@ -2,7 +2,8 @@
   "name": "functions",
   "scripts": {
     "lint": "tslint --project tsconfig.json",
-    "build": "tsc",
+    "build:dev": "tsc",
+    "build": "webpack --config webpack.config.js",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
@@ -15,7 +16,6 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "cross-blob": "^1.2.2",
     "express": "4.16.3",
     "firebase-admin": "^8.9.0",
     "firebase-functions": "^3.3.0",
