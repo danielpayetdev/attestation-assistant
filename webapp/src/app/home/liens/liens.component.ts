@@ -97,7 +97,7 @@ export class LiensComponent implements OnInit {
 
   public async initApiUrl(): Promise<void> {
     const token = await this.getToken();
-    this.urlApi = `https://${this.getOrigine()}/api/genererAttestation?api_key=${token}&motif={{TextField}}`;
+    this.urlApi = `https://${this.getOrigine()}/api/genererAttestation?api_key=${token}&motif= {{TextField}}`;
     if (this.clipboard.copy(this.urlApi)) {
       this.snackbar.open(
         'L\'url à était copié dans le presse-papiers',
