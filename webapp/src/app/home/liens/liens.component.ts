@@ -1,12 +1,14 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Injector } from '@angular/core';
 import { AngularFireFunctions, ORIGIN } from '@angular/fire/functions';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { saveAs } from 'file-saver';
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { MOTIF } from '../bean/motif';
+import { AngularFirestore } from '@angular/fire/firestore';
 
 const FONCTION_GENERER_PAR_EMAIL = 'genererAttestationParEmail';
 const FONCTION_GENERER_ET_TELECHARGER = 'getAttestation';
@@ -24,10 +26,11 @@ export class LiensComponent implements OnInit {
   constructor(
     private functions: AngularFireFunctions,
     private auth: AngularFireAuth,
-    @Inject(ORIGIN) private origin: string,
     private clipboard: Clipboard,
     private snackbar: MatSnackBar,
-    private bottomSheet: MatDialog
+    private dialog: MatDialog,
+    private injector: Injector,
+    private dataBase: AngularFirestore
   ) { }
 
   ngOnInit(): void {
@@ -93,9 +96,8 @@ export class LiensComponent implements OnInit {
   }
 
   public async initApiUrl(): Promise<void> {
-    const user: firebase.User = await this.auth.currentUser;
-    const id = await user.getIdToken(true);
-    this.urlApi = `${this.origin}/genererAttestation?api_key=${id}`;
+    const token = await this.getToken();
+    this.urlApi = `https://${this.getOrigine()}/api/genererAttestation?api_key=${token}&motif={{TextField}}`;
     if (this.clipboard.copy(this.urlApi)) {
       this.snackbar.open(
         'L\'url à était copié dans le presse-papiers',
@@ -105,8 +107,20 @@ export class LiensComponent implements OnInit {
     }
   }
 
+  private async getToken(){
+    return this.functions.httpsCallable('generateApiKey')({}).toPromise();
+  }
+
+  private getOrigine(): string {
+    try {
+      return this.injector.get(ORIGIN);
+    } catch (e) {
+      return window.location.host;
+    }
+  }
+
   private ouvrirSelectionMotif(): Observable<string> {
-    const ref = this.bottomSheet.open(SelectionMotifDialogComponent);
+    const ref = this.dialog.open(SelectionMotifDialogComponent);
     return ref.afterClosed();
   }
 }
@@ -116,6 +130,7 @@ export class LiensComponent implements OnInit {
 @Component({
   selector: 'app-select-motif',
   templateUrl: 'selection-motif.html',
+  styles: ['mat-list-item { cursor: pointer}']
 })
 export class SelectionMotifDialogComponent {
   public motif = MOTIF;

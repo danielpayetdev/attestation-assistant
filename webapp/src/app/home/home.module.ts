@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { HomeRoutingModule } from './home-routing.module';
 import { LiensComponent, SelectionMotifDialogComponent } from './liens/liens.component';
-import { CompteComponent } from './compte/compte.component';
+import { CompteComponent, ConfirmationSuppressionDialogComponent } from './compte/compte.component';
 import { HomeComponent } from './home.component';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
@@ -17,13 +17,16 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatListModule } from '@angular/material/list';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatSelectModule } from '@angular/material/select';
 
 @NgModule({
   declarations: [
     CompteComponent,
     LiensComponent,
     HomeComponent,
-    SelectionMotifDialogComponent
+    SelectionMotifDialogComponent,
+    ConfirmationSuppressionDialogComponent
   ],
   imports: [
     CommonModule,
@@ -39,11 +42,12 @@ import { MatListModule } from '@angular/material/list';
     MatProgressSpinnerModule,
     MatDialogModule,
     MatDividerModule,
-    MatListModule
+    MatListModule,
+    ReactiveFormsModule,
+    MatSelectModule
   ],
   providers: [
-    { provide: ORIGIN, useValue: 'https://attestation-assistant.web.app' }
-    // { provide: ORIGIN, useValue: 'http://localhost:5001' }
+    // {  provide: ORIGIN, useValue: 'http://localhost:5001' }
   ]
 })
 export class HomeModule { }

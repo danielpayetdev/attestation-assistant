@@ -11,4 +11,15 @@
     align-items: center;
     flex-direction: column;
   }
+
+  #enregistrement, #annuler-enregistrement {
+    margin-top: .3rem;
+    cursor: pointer;
+  }
+}
+
+@media (min-width: 900px) {
+  :host {
+    width: 30%;
+  }
 }

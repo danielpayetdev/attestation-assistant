@@ -152,11 +152,23 @@ const setfileName = () => {
 
 const getDate = () => {
     const now = new Date();
-    return `${now.getFullYear()}-${formatDeuxDigit(now.getMonth() + 1)}-${formatDeuxDigit(now.getDate())}_${formatDeuxDigit(now.getHours())}-${formatDeuxDigit(now.getMinutes())}`;
+    return `${now.getFullYear()}-${formatDeuxDigit(now.getMonth() + 1)}-${formatDeuxDigit(now.getDate())}_${formatDeuxDigit(getHour(now))}-${formatDeuxDigit(now.getMinutes())}`;
 }
 
 const formatDeuxDigit = (date: number) => {
     return `${date <= 9 ? '0' : ''}${date}`;
+}
+
+/**
+ * Force timezone Paris
+ * @param date 
+ */
+const getHour = (date: Date) => {
+    if (date.getHours() < 22) {
+        return date.getHours() + 2;
+    } else {
+        return (date.getHours() + 2) - 24;
+    }
 }
 
 const getPdf = () => {
@@ -171,8 +183,8 @@ const getUser: (userId: string) => Promise<Utilisateur> = async (userId) => {
 const validateToken = async (request: functions.https.Request, response: functions.Response) => {
     const apiKey = request.query.api_key;
     try {
-        const decodedToken = await admin.auth().verifyIdToken(apiKey);
-        return decodedToken.uid;
+        const ref = admin.firestore().collection('apiKeys').where("key", "==", apiKey);
+        return ((await ref.get()).docs)[0].id;
     } catch (e) {
         response.status(401).send(e.toString());
         return undefined;
@@ -188,7 +200,7 @@ const sendMail = async (email: string, pdf: Buffer, motif: string) => {
         text: "Bonjour, votre attestation de sortie se trouve en pièce jointe. Bonne journée. #RestezChezVous",
         html: "Bonjour, <br>Votre attestation de sortie se trouve en pièce jointe.<br><br>Bonne journée,<br>#RestezChezVous",
         attachments: [{
-            filename: 'attestation.pdf',
+            filename: FICHIER_NAME,
             content: pdf,
             contentType: 'application/pdf'
         }],

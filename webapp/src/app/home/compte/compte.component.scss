@@ -1,0 +1,29 @@
+mat-card, form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+form {
+  width: 100%;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+button {
+  margin: .5rem;
+}
+
+#supprimer-compte{
+  color:red;
+  margin-top: 2rem;
+  cursor: pointer;
+}
+
+@media (min-width: 900px) {
+  mat-form-field {
+    width: 50%;
+  }
+}

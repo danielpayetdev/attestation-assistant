@@ -1,1 +1,47 @@
-<button mat-raised-button color="primary" (click)="logout()">Se deconnecter</button>
+<mat-card>
+  <form [formGroup]="compteControl" (ngSubmit)="submitForm()">
+    <mat-form-field appearance="standard">
+      <mat-label>Email</mat-label>
+      <input  matInput [readonly]="true" formControlName="email">
+    </mat-form-field>
+    <mat-form-field appearance="standard">
+      <mat-label>Prénom</mat-label>
+      <input matInput formControlName="prenom">
+    </mat-form-field>
+    <mat-form-field appearance="standard">
+      <mat-label>Nom</mat-label>
+      <input matInput formControlName="nom">
+    </mat-form-field>
+    <mat-form-field appearance="standard">
+      <mat-label>Date de Naissance</mat-label>
+      <input matInput formControlName="dateNaissance" pattern="[0-9]{2}\/[0-9]{2}\/[0-9]{4}">
+    </mat-form-field>
+    <mat-form-field appearance="standard">
+      <mat-label>Lieu de Naissance</mat-label>
+      <input matInput formControlName="lieuNaissance">
+    </mat-form-field>
+    <mat-form-field appearance="standard">
+      <mat-label>Adresse</mat-label>
+      <input matInput formControlName="adresse">
+    </mat-form-field>
+    <mat-form-field appearance="standard">
+      <mat-label>ville</mat-label>
+      <input matInput formControlName="ville">
+    </mat-form-field>
+    <mat-form-field appearance="standard">
+      <mat-label>code postal</mat-label>
+      <input matInput formControlName="codePostal" type="number">
+    </mat-form-field>
+    <mat-form-field appearance="standard">
+      <mat-label>Motif par défaut</mat-label>
+      <mat-select formControlName="motif">
+        <mat-option *ngFor="let motif of motifs" [value]="motif.label">
+          {{motif.texte}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button type="button" mat-raised-button color="primary" [disabled]="!compteControl.valid" >Valider les modifications</button>
+  </form>
+  <button type="button" mat-raised-button color="warn" (click)="logout()">Se deconnecter</button>
+  <a id="supprimer-compte" (click)="supprimerCompte()">Supprimer mon compte</a>
+</mat-card>

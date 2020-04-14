@@ -6,3 +6,7 @@ export {
     genererAttestationParEmail,
     getAttestation
 } from './attestation/attestation';
+
+export {
+    generateApiKey
+} from './compte/compte';

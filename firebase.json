@@ -17,16 +17,8 @@
     ],
     "rewrites": [
       {
-        "source": "/genererAttestation",
+        "source": "/api/genererAttestation",
         "function": "genererAttestationPublic"
-      },
-      {
-        "source": "/genererAttestationParEmail",
-        "function": "genererAttestationParEmail"
-      },
-      {
-        "source": "/getAttestation",
-        "function": "getAttestation"
       },
       {
         "source": "**",
