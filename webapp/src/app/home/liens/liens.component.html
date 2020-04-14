@@ -18,6 +18,7 @@
 </mat-card>
 <mat-card id="configurerUrlRestApi">
   <button mat-raised-button color="primary" (click)="initApiUrl()">Afficher le lien API</button>
+  <p>Attention,au clique, l'ancien lien (token) ne sera plus valide.</p>
   <mat-card id="api-url" *ngIf="urlApi">
     <mat-form-field>
       <textarea matInput cdkTextareaAutosize #autosize="cdkTextareaAutosize" [value]="urlApi"></textarea>
