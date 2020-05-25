@@ -1,3 +1,5 @@
+> /!\ Depuis la fin du confinement c'est plus utile. Je déconnecte tout :) 
+
 # attestation-assistant
 
 Tout simple:
